@@ -257,7 +257,9 @@ NOTE: You need to have the Ballerina installed in you local machine to run the B
 $ballerina run guide.flight_booking_service/
 ```
 - Now you can execute the following curl commands to call the Airline reservation servie to reserve a seat in a flight
+
 **Book a seat** 
+
 ```
  curl -v -X POST -d '{ "Name":"Alice", "SSN":123456789, "Address":"345,abc,def", \
  "Telephone":112233 }' "http://localhost:9090/airline/reservation" -H \
