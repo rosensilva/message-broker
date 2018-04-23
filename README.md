@@ -77,74 +77,143 @@ Ballerina project initialized
 
 - Once you initialize your Ballerina project, you can change the names of the file to match with our guide project file names.
   
-### Implement the RESTful web service
+### Implement the Airline reservation web service with Ballerina message sender
 
 - We can get started with a Ballerina service; 'OrderMgtService', which is the RESTful service that serves the order management request. OrderMgtService can have multiple resources and each resource is dedicated for a specific order management functionality.
 
 - You can add the content to your Ballerina service as shown below. In that code segment you can find the implementation of the service and resource skeletons of 'OrderMgtService'. 
 For each order management operation, there is a dedicated resource and inside each resource we can implement the order management operation logic. 
 
-##### Skeleton code for order_mgt_service.bal
+##### Skeleton code for airline_resrvation.bal
 ```ballerina
-ppackage restful_service;
-
+import ballerina/mb;
+import ballerina/log;
 import ballerina/http;
+import ballerina/io;
 
-endpoint http:Listener listener {
+@Description {value:"Define the message queue endpoint for new bookings"}
+endpoint mb:SimpleQueueSender queueSenderBooking {
+    host:"localhost",
+    port:5672,
+    queueName:"NewBookingsQueue"
+};
+
+@Description {value:"Define the message queue endpoint for cancel bookings"}
+endpoint mb:SimpleQueueSender queueSenderCancelling {
+    host:"localhost",
+    port:5672,
+    queueName:"BookingCancellationQueue"
+};
+
+@Description {value:"Attributes associated with the service endpoint"}
+endpoint http:Listener airlineReservationEP {
     port:9090
 };
 
-// Order management is done using an in memory map.
-// Add some sample orders to 'orderMap' at startup.
-map<json> ordersMap;
-
-@Description {value:"RESTful service."}
-@http:ServiceConfig {basePath:"/ordermgt"}
-service<http:Service> order_mgt bind listener {
-
-    @Description {value:"Resource that handles the HTTP GET requests that are directed
-    to a specific order using path '/orders/<orderID>'"}
-    @http:ResourceConfig {
-        methods:["GET"],
-        path:"/order/{orderId}"
-    }
-    findOrder(endpoint client, http:Request req, string orderId) {
-        // Implementation
-    }
-
-    @Description {value:"Resource that handles the HTTP POST requests that are directed
-     to the path '/orders' to create a new Order."}
+@Description {value:"Airline reservation service exposed via HTTP/1.1."}
+@http:ServiceConfig {
+    basePath:"/airline"
+}
+service<http:Service> airlineReservationService bind airlineReservationEP {
+    @Description {value:"Resource for reserving seats on a flight"}
     @http:ResourceConfig {
         methods:["POST"],
-        path:"/order"
+        path:"/reservation"
     }
-    addOrder(endpoint client, http:Request req) {
-        // Implementation
+    bookFlight(endpoint conn, http:Request req) {
+        http:Response res = new;
+        // Get the booking details from the request
+        json requestMessage = check req.getJsonPayload();
+        string booking = requestMessage.toString();
+
+        // Create a message to send to the flight reservation system
+        mb:Message message = check queueSenderBooking.createTextMessage(booking);
+        // Send the message to the message queue
+        var _ = queueSenderBooking -> send(message);
+
+        // Set string payload as booking successful.
+        res.setStringPayload("Your booking was successful");
+
+        // Sends the response back to the client.
+        _ = conn -> respond(res);
     }
 
-    @Description {value:"Resource that handles the HTTP PUT requests that are directed
-    to the path '/orders' to update an existing Order."}
+    @Description {value:"Resource for cancelling already reserved seats on a flight"}
     @http:ResourceConfig {
-        methods:["PUT"],
-        path:"/order/{orderId}"
+        methods:["POST"],
+        path:"/cancellation"
     }
-    updateOrder(endpoint client, http:Request req, string orderId) {
-        // Implementation
-    }
+    cancelBooking(endpoint conn, http:Request req) {
+        http:Response res = new;
+        // Get the booking details from the request
+        json requestMessage = check req.getJsonPayload();
+        string cancelBooking = requestMessage.toString();
 
-    @Description {value:"Resource that handles the HTTP DELETE requests, which are 
-    directed to the path '/orders/<orderId>' to delete an existing Order."}
-    @http:ResourceConfig {
-        methods:["DELETE"],
-        path:"/order/{orderId}"
-    }
-    cancelOrder(endpoint client, http:Request req, string orderId) {
-        // Implementation
+        // Create a message to send to the flight reservation system
+        mb:Message message = check queueSenderCancelling.createTextMessage(cancelBooking);
+        // Send the message to the message queue
+        var _ = queueSenderCancelling -> send(message);
+
+        // Set string payload as booking successful.
+        res.setStringPayload("Your booking was successful");
+
+        // Sends the response back to the client.
+        _ = conn -> respond(res);
     }
 }
 ```
 
-- You can implement the business logic of each resources as per your requirements. For simplicity we have used an in-memory map to keep all the order details. You can find the full source code of the OrderMgtService below. In addition to the order processing logic, we have also manipulated some HTTP status codes and headers whenever required.  
+### Implement the Airline reservation system with Ballerina message receiver
+
+- We can get started with a Ballerina service; 'OrderMgtService', which is the RESTful service that serves the order management request. OrderMgtService can have multiple resources and each resource is dedicated for a specific order management functionality.
+
+- You can add the content to your Ballerina service as shown below. In that code segment you can find the implementation of the service and resource skeletons of 'OrderMgtService'. 
+For each order management operation, there is a dedicated resource and inside each resource we can implement the order management operation logic. 
+
+##### Skeleton code for flight_booking_system.bal
+
+```ballerina
+import ballerina/mb;
+import ballerina/log;
+
+@description{value:"Queue receiver endpoint for new flight bookings"}
+endpoint mb:SimpleQueueReceiver queueReceiverBooking {
+    host:"localhost",
+    port:5672,
+    queueName:"NewBookingsQueue"
+};
+
+@description{value:"Queue receiver endpoint for cancellation of flight bookings"}
+endpoint mb:SimpleQueueReceiver queueReceiverCancelling {
+    host:"localhost",
+    port:5672,
+    queueName:"BookingCancellationQueue"
+};
+
+@description{value:"Service to receive messages for new booking message queue"}
+service<mb:Consumer> bookingListener bind queueReceiverBooking {
+    @description{value:"Resource handler for new messages from queue"}
+    onMessage(endpoint consumer, mb:Message message) {
+        // Get the new message as the string
+        string messageText = check message.getTextMessageContent();
+        // Mock the processing of the message for new booking
+        log:printInfo("[NEW BOOKING] Details : " + messageText);
+    }
+}
+
+@description{value:"Service to receive messages for booking cancellation message queue"}
+service<mb:Consumer> cancellingListener bind queueReceiverCancelling {
+    @description{value:"Resource handler for new messages from queue"}
+    onMessage(endpoint consumer, mb:Message message) {
+        // Get the new message as the string
+        string messageText = check message.getTextMessageContent();
+        // Mock the processing of the message for cancellation of bookings
+        log:printInfo("[CANCEL BOOKING] : " + messageText);
+    }
+}
+```
+
+
 
 
 - With that we've completed the development of Airline reservation service with Ballerina messaging. 
