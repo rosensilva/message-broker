@@ -15,7 +15,7 @@ The following are the sections available in this guide.
 
 ## What you’ll build 
 
-To understanding how you can use messaging with Ballerina language and Ballerina message broker, let’s consider a real world use case of an Airline reservation online application. You can simmulate the Airline Reservations sample to simulate the following tasks:
+To understanding how you can use messaging with Ballerina message broker, let’s consider a real world use case of an Airline reservation online application. You can simmulate the Airline Reservations sample to simulate the following tasks:
 
 - Reserving seats on a flight
 - Cancelling a reservation
