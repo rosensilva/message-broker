@@ -14,16 +14,20 @@ The following are the sections available in this guide.
 - [Observability](#observability)
 
 ## What you’ll build 
-To understanding how you can build a RESTful web service using Ballerina, let’s consider a real world use case of an order management scenario of an online retail application. 
-We can model the order management scenario as a RESTful web service; 'OrderMgtService',  which accepts different HTTP request for order management tasks such as order creation, retrieval, updating and deletion.
-The following figure illustrates all the required functionalities of the OrderMgt RESTful web service that we need to build. 
+
+You can run the Airline Reservations sample to simulate the following tasks:
+
+- Reserving seats on a flight
+- Cancelling a reservation
+
+For each task, you put a message on a particular WebSphere MQ queue. The appropriate message flow gets the message from the queue and processes the message.
+
+The following figure illustrates the scenario of the airline reservation service with Ballerina messaging. 
 
 ![Ballerina Message Broker](images/messaging-with-ballerina.png "Ballerina Message Broker")
 
-- **Create Order** : To place a new order you can use the HTTP POST message that contains the order details, which is sent to the URL `http://xyz.retail.com/order`.The response from the service contains an HTTP 201 Created message with the location header pointing to the newly created resource `http://xyz.retail.com/order/123456`. 
-- **Retrieve Order** : You can retrieve the order details by sending an HTTP GET request to the appropriate URL which includes the order ID.`http://xyz.retail.com/order/<orderId>` 
-- **Update Order** : You can update an existing order by sending a HTTP PUT request with the content for the updated order. 
-- **Delete Order** : An existing order can be deleted by sending a HTTP DELETE request to the specific URL`http://xyz.retail.com/order/<orderId>`. 
+- **Reserve Seat** : To place a new order you can use the HTTP POST message that contains the order details, which is sent to the URL `http://xyz.retail.com/order`.The response from the service contains an HTTP 201 Created message with the location header pointing to the newly created resource `http://xyz.retail.com/order/123456`. 
+- **Cancel reservation** : You can retrieve the order details by sending an HTTP GET request to the appropriate URL which includes the order ID.`http://xyz.retail.com/order/<orderId>` 
 
 ## Prerequisites
  
