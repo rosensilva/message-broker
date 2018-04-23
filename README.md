@@ -270,8 +270,8 @@ Your booking was successful
 
 **Cancel Reservation** 
 ```
-curl -v -X POST -d '{ "bookingID":"A32D"}' "http://localhost:9090/airline/cancellation"\
- -H "Content-Type:application/json"
+curl -v -X POST -d '{ "bookingID":"A32D"}' "http://localhost:9090/\
+airline/cancellation" -H "Content-Type:application/json"
 
 Output : 
 You have successfully canceled your booking
@@ -334,8 +334,10 @@ ballerina: started HTTP/WS endpoint 0.0.0.0:9090
 ```
 $ ballerina  run guide.flight_booking_system/
 ballerina: initiating service(s) in 'guide.flight_booking_system'
-2018-04-23 20:39:41,872 INFO  [ballerina.jms] - Message receiver created for queue NewBookingsQueue 
-2018-04-23 20:39:41,905 INFO  [ballerina.jms] - Message receiver created for queue BookingCancellationQueue 
+2018-04-23 20:39:41,872 INFO  [ballerina.jms] - Message receiver created \
+for queue NewBookingsQueue 
+2018-04-23 20:39:41,905 INFO  [ballerina.jms] - Message receiver created \
+for queue BookingCancellationQueue 
 
 ```
 
