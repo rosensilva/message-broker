@@ -79,12 +79,14 @@ Ballerina project initialized
   
 ### Implement the Airline reservation web service with Ballerina message sender
 
-- We can get started with a Ballerina service; 'OrderMgtService', which is the RESTful service that serves the order management request. OrderMgtService can have multiple resources and each resource is dedicated for a specific order management functionality.
+- We can get started with the airline reservation service, which is the RESTful service that serves the flight booking request. This service will reveive the requests as HTTP POST method from the customers.
 
-- You can add the content to your Ballerina service as shown below. In that code segment you can find the implementation of the service and resource skeletons of 'OrderMgtService'. 
-For each order management operation, there is a dedicated resource and inside each resource we can implement the order management operation logic. 
+-  The service will extract the passenger details from the flight reservation request. The flight booking will then send to the flight booking system using messaging. 
 
-##### Skeleton code for airline_resrvation.bal
+- Ballerina message broker will be used as the message broker for this process. `endpoint mb:SimpleQueueSender queueSenderBooking` is the endpoint of the message queue sender for new bookings of flight. You can give the preferred configuration of the message broker and queue name inside the endpoint definition. We have used the default configurations for the ballerina message broker. `endpoint mb:SimpleQueueSender queueSenderCancelling` is the endpoint to send the messages for cancelling the reservations.
+- We have maintained two seperate queues for manage the flight reservations and cancellations.
+
+##### airline_resrvation.bal
 ```ballerina
 import ballerina/mb;
 import ballerina/log;
