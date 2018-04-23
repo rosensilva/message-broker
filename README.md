@@ -15,24 +15,25 @@ The following are the sections available in this guide.
 
 ## What you’ll build 
 
-You can run the Airline Reservations sample to simulate the following tasks:
+To understanding how you can use messaging with Ballerina language and Ballerina message broker, let’s consider a real world use case of an Airline reservation online application. You can simmulate the Airline Reservations sample to simulate the following tasks:
 
 - Reserving seats on a flight
 - Cancelling a reservation
 
-For each task, you put a message on a particular WebSphere MQ queue. The appropriate message flow gets the message from the queue and processes the message.
+For each task, you put a message on a particular Ballerina message queue. The appropriate message flow gets the message from the queue and processes the message.
 
 The following figure illustrates the scenario of the airline reservation service with Ballerina messaging. 
 
 ![Ballerina Message Broker](images/messaging-with-ballerina.png "Ballerina Message Broker")
 
-- **Reserve Seat** : To place a new order you can use the HTTP POST message that contains the order details, which is sent to the URL `http://xyz.retail.com/order`.The response from the service contains an HTTP 201 Created message with the location header pointing to the newly created resource `http://xyz.retail.com/order/123456`. 
-- **Cancel reservation** : You can retrieve the order details by sending an HTTP GET request to the appropriate URL which includes the order ID.`http://xyz.retail.com/order/<orderId>` 
+- **Reserve Seat** : To reserve a seat you can use the HTTP POST message that contains the passanger details, which is sent to the URL `http://localhost:9090/airline/reservation`. 
+- **Cancel reservation** : You can cancel the existing booking by sending an HTTP POST request to the URL `http://localhost:9090/airline/cancellation`. 
 
 ## Prerequisites
  
 - JDK 1.8 or later
 - [Ballerina Distribution](https://github.com/ballerina-lang/ballerina/blob/master/docs/quick-tour.md)
+- [Ballerina Message Broker](https://github.com/ballerina-platform/ballerina-message-broker)
 - A Text Editor or an IDE 
 
 ### Optional requirements
