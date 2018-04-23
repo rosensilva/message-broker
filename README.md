@@ -24,7 +24,11 @@ For each task, you put a message on a particular Ballerina message queue. The ap
 
 The following figure illustrates the scenario of the airline reservation service with Ballerina messaging. 
 
+&nbsp;
+&nbsp;
 ![Ballerina Message Broker](images/messaging-with-ballerina.png "Ballerina Message Broker")
+&nbsp;
+&nbsp;
 
 - **Reserve Seat** : To reserve a seat you can use the HTTP POST message that contains the passanger details, which is sent to the URL `http://localhost:9090/airline/reservation`. 
 - **Cancel reservation** : You can cancel the existing booking by sending an HTTP POST request to the URL `http://localhost:9090/airline/cancellation`. 
