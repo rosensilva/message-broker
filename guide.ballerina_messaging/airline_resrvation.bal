@@ -3,14 +3,14 @@ import ballerina/log;
 import ballerina/http;
 import ballerina/io;
 
-@Description {value:"Define the message queue endpoint for new bookings"}
+@Description {value:"Queue sender endpoint for new bookings"}
 endpoint mb:SimpleQueueSender queueSenderBooking {
     host:"localhost",
     port:5672,
     queueName:"NewBookingsQueue"
 };
 
-@Description {value:"Define the message queue endpoint for cancel bookings"}
+@Description {value:"Queue sender endpoint for cancel bookings"}
 endpoint mb:SimpleQueueSender queueSenderCancelling {
     host:"localhost",
     port:5672,
