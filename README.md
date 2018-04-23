@@ -49,11 +49,13 @@ The following figure illustrates the scenario of the airline reservation service
 Ballerina is a complete programming language that can have any custom project structure that you wish. Although the language allows you to have any package structure, use the following package structure for this project to follow this guide.
 
 ```
-restful-service
-  └── guide.restful_service
-      ├── order_mgt_service.bal
-      └── test
-          └── order_mgt_service_test.bal          
+messaging-with-ballerina
+├── Ballerina.toml
+├── guide.flight_booking_service
+│   └── airline_resrvation.bal
+└── guide.flight_booking_system
+    └── flight_booking_system.bal
+
 ```
 You can create the above Ballerina project using Ballerina project initializing toolkit.
 
@@ -62,10 +64,12 @@ You can create the above Ballerina project using Ballerina project initializing 
 ```bash
 restful-service$ ballerina init -i
 Create Ballerina.toml [yes/y, no/n]: (y) y
-Organization name: (username) restful-service
+Organization name: (username) messaging-with-ballerina
 Version: (0.0.1) 
 Ballerina source [service/s, main/m]: (s) s
-Package for the service : (no package) guide.restful_service
+Package for the service : (no package) guide.flight_booking_service
+Ballerina source [service/s, main/m]: (s) s
+Package for the service : (no package) guide.flight_booking_system
 Ballerina source [service/s, main/m, finish/f]: (f) f
 
 Ballerina project initialized
@@ -143,121 +147,7 @@ service<http:Service> order_mgt bind listener {
 - You can implement the business logic of each resources as per your requirements. For simplicity we have used an in-memory map to keep all the order details. You can find the full source code of the OrderMgtService below. In addition to the order processing logic, we have also manipulated some HTTP status codes and headers whenever required.  
 
 
-##### order_mgt_service.bal
-```ballerina
-package restful_service;
-
-import ballerina/http;
-
-endpoint http:Listener listener {
-    port:9090
-};
-
-// Order management is done using an in memory map.
-// Add some sample orders to 'orderMap' at startup.
-map<json> ordersMap;
-
-@Description {value:"RESTful service."}
-@http:ServiceConfig {basePath:"/ordermgt"}
-service<http:Service> order_mgt bind listener {
-
-    @Description {value:"Resource that handles the HTTP GET requests that are directed
-    to a specific order using path '/orders/<orderID>'"}
-    @http:ResourceConfig {
-        methods:["GET"],
-        path:"/order/{orderId}"
-    }
-    findOrder(endpoint client, http:Request req, string orderId) {
-        // Find the requested order from the map and retrieve it in JSON format.
-        json? payload = ordersMap[orderId];
-        http:Response response;
-        if (payload == null) {
-            payload = "Order : " + orderId + " cannot be found.";
-        }
-
-        // Set the JSON payload in the outgoing response message.
-        response.setJsonPayload(payload);
-
-        // Send response to the client.
-        _ = client -> respond(response);
-    }
-
-    @Description {value:"Resource that handles the HTTP POST requests that are directed
-     to the path '/orders' to create a new Order."}
-    @http:ResourceConfig {
-        methods:["POST"],
-        path:"/order"
-    }
-    addOrder(endpoint client, http:Request req) {
-        json orderReq = check req.getJsonPayload();
-        string orderId = orderReq.Order.ID.toString() but { () => "" };
-        ordersMap[orderId] = orderReq;
-
-        // Create response message.
-        json payload = {status:"Order Created.", orderId:orderId};
-        http:Response response;
-        response.setJsonPayload(payload);
-
-        // Set 201 Created status code in the response message.
-        response.statusCode = 201;
-        // Set 'Location' header in the response message.
-        // This can be used by the client to locate the newly added order.
-        response.setHeader("Location", "http://localhost:9090/ordermgt/order/" + orderId);
-
-        // Send response to the client.
-        _ = client -> respond(response);
-    }
-
-    @Description {value:"Resource that handles the HTTP PUT requests that are directed
-    to the path '/orders' to update an existing Order."}
-    @http:ResourceConfig {
-        methods:["PUT"],
-        path:"/order/{orderId}"
-    }
-    updateOrder(endpoint client, http:Request req, string orderId) {
-        json updatedOrder = check req.getJsonPayload();
-
-        // Find the order that needs to be updated and retrieve in JSON format.
-        json existingOrder = ordersMap[orderId];
-
-        // Updating existing order with the attributes of the updated order.
-        if (existingOrder != null) {
-            existingOrder.Order.Name = updatedOrder.Order.Name;
-            existingOrder.Order.Description = updatedOrder.Order.Description;
-            ordersMap[orderId] = existingOrder;
-        } else {
-            existingOrder = "Order : " + orderId + " cannot be found.";
-        }
-
-        http:Response response;
-        // Set the JSON payload to the outgoing response message to the client.
-        response.setJsonPayload(existingOrder);
-        // Send response to the client.
-        _ = client -> respond(response);
-    }
-
-    @Description {value:"Resource that handles the HTTP DELETE requests, which are
-    directed to the path '/orders/<orderId>' to delete an existing Order."}
-    @http:ResourceConfig {
-        methods:["DELETE"],
-        path:"/order/{orderId}"
-    }
-    cancelOrder(endpoint client, http:Request req, string orderId) {
-        http:Response response;
-        // Remove the requested order from the map.
-        _ = ordersMap.remove(orderId);
-
-        json payload = "Order : " + orderId + " removed.";
-        // Set a generated payload with order status.
-        response.setJsonPayload(payload);
-
-        // Send response to the client.
-        _ = client -> respond(response);
-    }
-}
-```
-
-- With that we've completed the development of OrderMgtService. 
+- With that we've completed the development of Airline reservation service with Ballerina messaging. 
 
 
 ## Testing 
