@@ -270,8 +270,8 @@ Your booking was successful
 
 **Cancel Reservation** 
 ```
-curl -v -X POST -d '{ "bookingID":"A32D"}' "http://localhost:9090/\
-airline/cancellation" -H "Content-Type:application/json"
+curl -v -X POST -d '{ "bookingID":"A32D"}' "http://localhost:9090/airline/cancellation"\
+-H "Content-Type:application/json"
 
 Output : 
 You have successfully canceled your booking
@@ -279,7 +279,8 @@ You have successfully canceled your booking
 - The `guide.flight_booking_system` is the system that process the messages send through the ballerina message broker. The following consol logs should be printed in your consol where you running the `guide.flight_booking_system`
 
 ```
-2018-04-23 21:08:09,475 INFO  [guide.flight_booking_system] - [NEW BOOKING] Details : {"Name":"Alice","SSN":123456789,"Address":"345,abc,def","Telephone":112233} 
+2018-04-23 21:08:09,475 INFO  [guide.flight_booking_system] - [NEW BOOKING] Details :\
+{"Name":"Alice","SSN":123456789,"Address":"345,abc,def","Telephone":112233} 
 
 2018-04-23 21:10:59,439 INFO  [guide.flight_booking_system] - [CANCEL BOOKING] : \
 {"bookingID":"AV323D"} 
