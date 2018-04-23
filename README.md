@@ -31,10 +31,12 @@ The following figure illustrates the scenario of the airline reservation service
 &nbsp;
 
 ![Ballerina Message Broker](images/messaging-with-ballerina.png "Ballerina Message Broker")
+
 &nbsp;
 &nbsp;
 &nbsp;
 &nbsp;
+
 
 
 - **Reserve Seat** : To reserve a seat you can use the HTTP POST message that contains the passanger details, which is sent to the URL `http://localhost:9090/airline/reservation`. 
@@ -178,12 +180,17 @@ service<http:Service> airlineReservationService bind airlineReservationEP {
 
 ### Implement the Airline reservation system with Ballerina message receiver
 
-- We can get started with a Ballerina service; 'OrderMgtService', which is the RESTful service that serves the order management request. OrderMgtService can have multiple resources and each resource is dedicated for a specific order management functionality.
+- You can receive the messages from the flight reservation service through the Balleina message broker.
 
-- You can add the content to your Ballerina service as shown below. In that code segment you can find the implementation of the service and resource skeletons of 'OrderMgtService'. 
-For each order management operation, there is a dedicated resource and inside each resource we can implement the order management operation logic. 
+- You can define endpoints to reveive messages from Ballerina message queues. The `endpoint mb:SimpleQueueReceiver queueReceiverBooking` will be the endpoint for the messages from new flight reservations. The parameters inside the endpoint will used to connect with the Ballerina message broker. We have used the defaults values for this guide
 
-##### Skeleton code for flight_booking_system.bal
+- The `endpoint mb:SimpleQueueReceiver queueReceiverCancelling` is the endpoint for the message broker and queue for the cancellations of the flight reservations.
+
+- You can have the Ballerina message listener service for each message queues. The message listener service for the new bookings is declared using `service<mb:Consumer> bookingListener bind queueReceiverBooking ` serivce. Inside the service we have the ` onMessage(endpoint consumer, mb:Message message)` resource which will trigger when a new message arrives for the defined queue. Inside the resoucrce we can handle the business logic that we want to proceed when a new flight booking order comes. For the guide we will print the message in the console.
+
+- Similary we have `service<mb:Consumer> cancellingListener bind queueReceiverCancelling` service to handle flight reservation cancellation orders.
+
+##### flight_booking_system.bal
 
 ```ballerina
 import ballerina/mb;
@@ -225,8 +232,6 @@ service<mb:Consumer> cancellingListener bind queueReceiverCancelling {
     }
 }
 ```
-
-
 
 
 - With that we've completed the development of Airline reservation service with Ballerina messaging. 
