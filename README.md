@@ -239,55 +239,51 @@ service<mb:Consumer> cancellingListener bind queueReceiverCancelling {
 
 ## Testing 
 
-### Invoking the RESTful service 
+### Invoking airline reservation service with ballerina message broker
 
-You can run the RESTful service that you developed above, in your local environment. Open your terminal and navigate to `<SAMPLE_ROOT_DIRECTORY>/guide.restful_service` and execute the following command.
+- First, you need to run [Ballerina message broker](https://github.com/ballerina-platform/ballerina-message-broker). Follow the instruction on the Ballerina message broker Github repository setup the Ballerina message broker.
 ```
-$ballerina run restful_service
+<BALLERINA_MESSAGE_BROKER>/bin$ ./broker.sh 
+```
+
+- Then, you need to run flight booking sytem(which listen to the message queues)`guide.flight_booking_system`. Open your terminal and navigate to `<SAMPLE_ROOT_DIRECTORY>/` and execute the following command.
+```
+$ballerina run guide.flight_booking_system/
 ```
 NOTE: You need to have the Ballerina installed in you local machine to run the Ballerina service.  
 
-You can test the functionality of the OrderMgt RESTFul service by sending HTTP request for each order management operation. For example, we have used the curl commands to test each operation of OrderMgtService as follows. 
-
-**Create Order** 
+- Then, you need to run flight booking service(which serves client requests throught HTTP REST calls)`guide.flight_booking_service`. Open your terminal and navigate to `<SAMPLE_ROOT_DIRECTORY>/` and execute the following command.
 ```
-curl -v -X POST -d \
-'{ "Order": { "ID": "100500", "Name": "XYZ", "Description": "Sample order."}}' \
-"http://localhost:9090/ordermgt/order" -H "Content-Type:application/json"
+$ballerina run guide.flight_booking_service/
+```
+- Now you can execute the following curl commands to call the Airline reservation servie to reserve a seat in a flight
+**Book a seat** 
+```
+ curl -v -X POST -d '{ "Name":"Alice", "SSN":123456789, "Address":"345,abc,def", \
+ "Telephone":112233 }' "http://localhost:9090/airline/reservation" -H \
+ "Content-Type:application/json"
+
 
 Output :  
-< HTTP/1.1 201 Created
-< Content-Type: application/json
-< Location: http://localhost:9090/ordermgt/order/100500
-< Transfer-Encoding: chunked
-< Server: wso2-http-transport
-
-{"status":"Order Created.","orderId":"100500"} 
+Your booking was successful
 ```
 
-**Retrieve Order** 
+**Cancel Reservation** 
 ```
-curl "http://localhost:9090/ordermgt/order/100500" 
+curl -v -X POST -d '{ "bookingID":"A32D"}' "http://localhost:9090/airline/cancellation"\
+ -H "Content-Type:application/json"
 
 Output : 
-{"Order":{"ID":"100500","Name":"XYZ","Description":"Sample order."}}
+You have successfully canceled your booking
 ```
+- The `guide.flight_booking_system` is the system that process the messages send through the ballerina message broker. The following consol logs should be printed in your consol where you running the `guide.flight_booking_system`
 
-**Update Order** 
 ```
-curl -X PUT -d '{ "Order": {"Name": "XYZ", "Description": "Updated order."}}' \
-"http://localhost:9090/ordermgt/order/100500" -H "Content-Type:application/json"
+2018-04-23 21:08:09,475 INFO  [guide.flight_booking_system] - [NEW BOOKING] Details : {"Name":"Alice","SSN":123456789,"Address":"345,abc,def","Telephone":112233} 
 
-Output: 
-{"Order":{"ID":"100500","Name":"XYZ","Description":"Updated order."}}
-```
+2018-04-23 21:10:59,439 INFO  [guide.flight_booking_system] - [CANCEL BOOKING] : \
+{"bookingID":"AV323D"} 
 
-**Cancel Order** 
-```
-curl -X DELETE "http://localhost:9090/ordermgt/order/100500"
-
-Output:
-"Order : 100500 removed."
 ```
 
 ### Writing unit tests 
@@ -297,15 +293,10 @@ In Ballerina, the unit test cases should be in the same package inside a folder 
 * Test functions should contain test prefix.
   * e.g.: testResourceAddOrder()
 
-This guide contains unit test cases for each resource available in the 'order_mgt_service.bal'.
-
-To run the unit tests, go to the sample `guide.restful_service` directory and run the following command.
+To run the unit tests you run the following command.
 ```bash
    $ballerina test
 ```
-
-To check the implementation of the test file, refer to the [order_mgt_service_test.bal](https://github.com/ballerina-guides/restful-service/blob/master/guide.restful_service/restful_service/test/order_mgt_service_test.bal).
-
 
 ## Deployment
 
@@ -313,187 +304,38 @@ Once you are done with the development, you can deploy the service using any of 
 
 ### Deploying locally
 
-- As the first step you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. It points to the directory in which the service we developed above located and it will create an executable binary out of that. Navigate to the `<SAMPLE_ROOT>/guide.restful_service/` folder and run the following command. 
+- As the first step you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. It points to the directory in which the service we developed above located and it will create an executable binary out of that. Navigate to the `<SAMPLE_ROOT>/` folder and run the following commands. 
 
 ```
-$ballerina build restful_service
+$ballerina build guide.flight_booking_service
 ```
 
-- Once the restful_service.balx is created inside the target folder, you can run that with the following command. 
+```
+$ballerina build guide.flight_booking_system
+```
+
+- Once the guide.flight_booking_service.balx and guide.flight_booking_system.balx are created inside the target folder, you can run that with the following command. 
 
 ```
-$ballerina run target/restful_service.balx
+$ballerina run target/guide.flight_booking_service.balx
+```
+
+```
+$ballerina run target/guide.flight_booking_system.balx
 ```
 
 - The successful execution of the service should show us the following output. 
 ```
-$ ballerina run target/restful_service.balx 
-
-ballerina: deploying service(s) in 'target/restful_service.balx'
-ballerina: started HTTP/WS server connector 0.0.0.0:9090
-```
-### Deploying on Docker
-
-
-You can run the service that we developed above as a docker container. As Ballerina platform offers native support for running ballerina programs on 
-containers, you just need to put the corresponding docker annotations on your service code. 
-
-- In our OrderMgtService, we need to import  `` import ballerinax/docker; `` and use the annotation `` @docker:Config `` as shown below to enable docker image generation during the build time. 
-
-##### order_mgt_service.bal
-```ballerina
-package restful_service;
-
-import ballerina/http;
-import ballerinax/docker;
-
-@docker:Config {
-    registry:"ballerina.guides.io",
-    name:"restful_service",
-    tag:"v1.0"
-}
-
-@docker:Expose{}
-endpoint http:Listener listener {
-    port:9090
-};
-
-// Order management is done using an in memory map.
-// Add some sample orders to 'orderMap' at startup.
-map<json> ordersMap;
-
-@Description {value:"RESTful service."}
-@http:ServiceConfig {basePath:"/ordermgt"}
-service<http:Service> order_mgt bind listener {
-``` 
-
-- Now you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. It points to the service file that we developed above and it will create an executable binary out of that. 
-This will also create the corresponding docker image using the docker annotations that you have configured above. Navigate to the `<SAMPLE_ROOT>/guide.restful_service/` folder and run the following command.  
-  
-```
-   $ballerina build restful_service
-
-   Run following command to start docker container: 
-   docker run -d -p 9090:9090 ballerina.guides.io/restful_service:v1.0
+$ballerina run guide.ballerina_messaging/
+ballerina: initiating service(s) in 'guide.ballerina_messaging'
+ballerina: started HTTP/WS endpoint 0.0.0.0:9090
 ```
 
-- Once you successfully build the docker image, you can run it with the `` docker run`` command that is shown in the previous step.  
+```
+$ ballerina  run guide.flight_booking_system/
+ballerina: initiating service(s) in 'guide.flight_booking_system'
+2018-04-23 20:39:41,872 INFO  [ballerina.jms] - Message receiver created for queue NewBookingsQueue 
+2018-04-23 20:39:41,905 INFO  [ballerina.jms] - Message receiver created for queue BookingCancellationQueue 
 
-```   
-   docker run -d -p 9090:9090 ballerina.guides.io/restful_service:v1.0
 ```
 
-  Here we run the docker image with flag`` -p <host_port>:<container_port>`` so that we  use  the host port 9090 and the container port 9090. Therefore you can access the service through the host port. 
-
-- Verify docker container is running with the use of `` $ docker ps``. The status of the docker container should be shown as 'Up'. 
-- You can access the service using the same curl commands that we've used above. 
- 
-```
-   curl -v -X POST -d '{ "Order": { "ID": "100500", "Name": "XYZ", "Description": "Sample \
-   order."}}' "http://localhost:9090/ordermgt/order" -H "Content-Type:application/json"    
-```
-
-### Deploying on Kubernetes
-
-- You can run the service that we developed above, on Kubernetes. The Ballerina language offers native support for running a ballerina programs on Kubernetes, 
-with the use of Kubernetes annotations that you can include as part of your service code. Also, it will take care of the creation of the docker images. 
-So you don't need to explicitly create docker images prior to deploying it on Kubernetes.   
-
-- We need to import `` import ballerinax/kubernetes; `` and use `` @kubernetes `` annotations as shown below to enable kubernetes deployment for the service we developed above. 
-
-##### order_mgt_service.bal
-
-```ballerina
-package restful_service;
-
-import ballerina/http;
-import ballerinax/kubernetes;
-
-@kubernetes:Ingress {
-    hostname:"ballerina.guides.io",
-    name:"ballerina-guides-restful-service",
-    path:"/"
-}
-
-@kubernetes:Service {
-    serviceType:"NodePort",
-    name:"ballerina-guides-restful-service"
-}
-
-@kubernetes:Deployment {
-    image:"ballerina.guides.io/restful_service:v1.0",
-    name:"ballerina-guides-restful-service"
-}
-
-endpoint http:Listener listener {
-    port:9090
-};
-
-// Order management is done using an in memory map.
-// Add some sample orders to 'orderMap' at startup.
-map<json> ordersMap;
-
-@Description {value:"RESTful service."}
-@http:ServiceConfig {basePath:"/ordermgt"}
-service<http:Service> order_mgt bind listener {    
-``` 
-
-- Here we have used ``  @kubernetes:Deployment `` to specify the docker image name which will be created as part of building this service. 
-- We have also specified `` @kubernetes:Service {} `` so that it will create a Kubernetes service which will expose the Ballerina service that is running on a Pod.  
-- In addition we have used `` @kubernetes:Ingress `` which is the external interface to access your service (with path `` /`` and host name ``ballerina.guides.io``)
-
-- Now you can build a Ballerina executable archive (.balx) of the service that we developed above, using the following command. It points to the service file that we developed above and it will create an executable binary out of that. 
-This will also create the corresponding docker image and the Kubernetes artifacts using the Kubernetes annotations that you have configured above.
-  
-```
-   $ballerina build restful_service
-  
-   Run following command to deploy kubernetes artifacts:  
-   kubectl apply -f ./target/restful_service/kubernetes
-```
-
-- You can verify that the docker image that we specified in `` @kubernetes:Deployment `` is created, by using `` docker images ``. 
-- Also the Kubernetes artifacts related our service, will be generated in `` ./target/restful_service/kubernetes``. 
-- Now you can create the Kubernetes deployment using:
-
-```
-   $ kubectl apply -f ./target/restful_service/kubernetes 
- 
-   deployment.extensions "ballerina-guides-restful-service" created
-   ingress.extensions "ballerina-guides-restful-service" created
-   service "ballerina-guides-restful-service" created
-```
-
-- You can verify Kubernetes deployment, service and ingress are running properly, by using following Kubernetes commands.
-
-```
-   $kubectl get service
-   $kubectl get deploy
-   $kubectl get pods
-   $kubectl get ingress
-```
-
-- If everything is successfully deployed, you can invoke the service either via Node port or ingress. 
-
-Node Port:
- 
-```
-curl -v -X POST -d \
-'{ "Order": { "ID": "100500", "Name": "XYZ", "Description": "Sample order."}}' \
-"http://localhost:<Node_Port>/ordermgt/order" -H "Content-Type:application/json"  
-```
-
-Ingress:
-
-Add `/etc/hosts` entry to match hostname. 
-``` 
-127.0.0.1 ballerina.guides.io
-```
-
-Access the service 
-
-``` 
-curl -v -X POST -d \
-'{ "Order": { "ID": "100500", "Name": "XYZ", "Description": "Sample order."}}' \
-"http://ballerina.guides.io/ordermgt/order" -H "Content-Type:application/json" 
-```
